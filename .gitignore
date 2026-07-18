@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+*.keras
+
+# Large datasets
+dataset/
+datasets/
+data/
+raw_data/
+# UBFC dataset
+UBFC_ROOT/
+
+# Outputs
+results/
+output/
+outputs/
+runs/
+logs/
+
+# Environment variables
+.env
