@@ -96,4 +96,4 @@
 - **모달리티 간 타임스탬프 동기화:** 서로 다른 샘플링 주기를 가진 Blink, Gaze, rPPG 데이터의 시점 일치화
 - **Feature-level Fusion:** 다른 팀원 분들이 추출한 특징 데이터와 결합하여 분석 차원 확장
 - **Cognitive Load Classification:** 추출된 통합 feature를 바탕으로 정교한 인지 부하 상태 분류 모델 도입
-- **Lie Detection Pipeline 구축:** 최종 목표인 인지 부하 기반의 거짓말 판별 머신러닝 분류기 완성
+- **Lie Detection Pipeline 구축:** 최종 목표인 인지 부하 기반의 Lie Detection Pipeline 완성
