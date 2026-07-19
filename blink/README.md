@@ -71,9 +71,9 @@
    - 테스트용으로 소수의 피험자(예: 10명)만 제한해서 돌리고 싶을 때
    python run_pipeline.py --limit 10
 
-   결과물 1: blink_features_summary.csv (피험자 윈도우 단위 Blink Features 요약)
-   결과물 2: blink_overload_labels_personalized.csv (K-means 기반 과부하 라벨링 결과)
-   결과물 3: blink_spectrograms/ (폴더 내 참가자별 .npy 스펙트로그램 데이터)
+   - 결과물 1: blink_features_summary.csv (피험자 윈도우 단위 Blink Features 요약)
+   - 결과물 2: blink_overload_labels_personalized.csv (K-means 기반 과부하 라벨링 결과)
+   - 결과물 3: blink_spectrograms/ (폴더 내 참가자별 .npy 스펙트로그램 데이터)
 
 3. Blink 스펙트로그램 시각화 (확인용)파이프라인이 저장한 스펙트로그램 배열 데이터를 2D 히트맵 이미지로 변환합니다.
    - 특정 참가자(예: sub-01) 스펙트로그램 출력
@@ -82,4 +82,4 @@
    - ID를 생략하면 폴더 내 첫 번째 스펙트로그램을 자동 시각화
    python plot_blink_spectrogram.py
 
-   결과물: {sub_id}_spectrogram_heatmap.png 파일 저장 및 화면 출력.
+   - 결과물: {sub_id}_spectrogram_heatmap.png (파일 저장 및 화면 출력)
