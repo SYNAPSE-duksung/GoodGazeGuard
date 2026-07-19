@@ -1,13 +1,13 @@
 """
 labeling.py
 =============================================================
-K-means(k=2) 기반 '개인화된' 인지과부하 라벨링.
+K-means(k=2) 기반 개인화된 인지과부하 라벨링.
 
 전체 참가자를 한 번에 묶어 클러스터링하지 않고, 참가자(피험자)별로
-각자의 정답률 분포에 대해 K-means(k=2)를 '따로' 수행합니다.
-→ 사람마다 다른 인지과부하 발생 기준점(threshold)을 그 사람 데이터
+각자의 정답률 분포에 대해 K-means(k=2)를 따로 수행
+→ 사람마다 다른 인지과부하 발생 기준점을 그 사람 데이터
   안에서 스스로 찾아내므로, 전체 평균이나 고정 컷오프보다 개인차를
-  훨씬 잘 반영합니다.
+  훨씬 잘 반영 가능
 """
 
 import numpy as np
@@ -58,13 +58,6 @@ from sklearn.cluster import KMeans
 def label_overload_kmeans_personalized(df: pd.DataFrame, value_col: str,
                                         group_col: str = "participant_id",
                                         label_name: str = "overload_kmeans") -> pd.DataFrame:
-    """
-    df: 참가자별로 여러 개의 관측치(시행 단위)가 있는 long-format 데이터.
-        예) beh_labeled.csv의 시행별 'accuracy' 컬럼
-    value_col: 클러스터링 기준 값 (예: 'accuracy')
-    group_col: 참가자 식별자 컬럼
-    label_name: 결과로 추가될 라벨 컬럼 이름 (1 = 과부하, 0 = 정상)
-    """
     out = df.copy()
     out[label_name] = np.nan
 
