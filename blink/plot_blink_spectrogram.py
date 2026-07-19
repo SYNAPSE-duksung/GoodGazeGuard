@@ -2,14 +2,14 @@
 plot_blink_spectrogram.py
 =============================================================
 run_pipeline.py가 저장한 참가자별 blink 스펙트로그램
-(blink_spectrograms/{sub_id}_spectrogram.npy)을 히트맵으로 시각화합니다.
+(blink_spectrograms/{sub_id}_spectrogram.npy)을 히트맵으로 시각화
 
-⚠️ 실행 전 준비:
+실행 전 준비:
     pip install matplotlib --break-system-packages
 
 사용법 (PyCharm 터미널에서):
     python plot_blink_spectrogram.py sub-01
-    (참가자 ID를 안 주면 blink_spectrograms/ 폴더에서 처음 찾은 파일을 씁니다)
+    (참가자 ID를 안 주면 blink_spectrograms/ 폴더에서 처음 찾은 파일을 사용)
 """
 
 import sys
@@ -70,8 +70,7 @@ def plot_spectrogram(sub_id: str, save_path: str = None, show: bool = True):
     # x축: 시간 (분 단위가 초 단위보다 읽기 편함)
     time_min = np.arange(n_windows) * config.STEP_SEC / 60.0
 
-    # y축: Hz 대신 '분당 깜빡임 횟수(blinks/min)'로 변환.
-    # Cho(2021) 관심 대역이 정확히 [2, 25] blinks/min과 대응되고 훨씬 직관적.
+    # y축: 분당 깜빡임 횟수(blinks/min)
     freqs_hz = np.linspace(config.FREQ_MIN_HZ, config.FREQ_MAX_HZ, n_freq)
     blinks_per_min = freqs_hz * 60.0
 
