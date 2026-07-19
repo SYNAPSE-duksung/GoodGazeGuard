@@ -5,6 +5,7 @@
 본 모듈은 [OpenNeuro Eye Tracking Dataset](https://openneuro.org/datasets/ds003838/versions/1.0.6)의 시선 좌표 데이터를 전처리한 뒤, 인지부하와 관련된 Gaze Feature를 추출하고 K-Means Clustering을 통해 Feature 공간에서 인지부하 수준이 자연스럽게 분리되는지 분석합니다.
 
 향후에는 Pupil, Blink, rPPG와 Feature-level Fusion을 수행하여 멀티모달 기반 인지부하 및 거짓말 판별 시스템으로 확장하는 것을 목표로 합니다.
+작성: Bibibip
 
 
 # 전체 파이프라인
