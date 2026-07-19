@@ -37,7 +37,7 @@ def blink_interval_series(onset_times: np.ndarray):
 
     심박변이도(HRV) 분석에서 R-R interval을 심박 발생 시각에 매칭해
     Lomb-Scargle periodogram을 적용하는 것과 동일한 방식. 두 번째 blink부터,
-    그 시각에 '직전 blink와의 간격(초)'을 값으로 대응시킵니다.
+    그 시각에 '직전 blink와의 간격(초)'을 값으로 대응
     (단순히 각 이벤트에 상수 1을 대응시키면 신호에 분산이 없어 Lomb-Scargle이
     아무 주파수 성분도 못 잡아냄 — 반드시 실제로 변화하는 IBI 값을 써야 함.)
 
@@ -57,16 +57,7 @@ def blink_interval_series(onset_times: np.ndarray):
 def blink_lombscargle_spectrogram(onset_times: np.ndarray,
                                    t_start: float, t_end: float,
                                    sub_id: str = "", show_progress: bool = False) -> np.ndarray:
-    """
-    Cho(2021) Section 3.2 그대로 구현:
-      - WINDOW_SEC(61초) 슬라이딩 윈도우, STEP_SEC(1초) 스텝
-      - 각 윈도우 안의 blink IBI 값에 Lomb-Scargle power 계산
-      - [FREQ_MIN_HZ, FREQ_MAX_HZ] 대역을 N_FREQ_BINS개로 균등 분할
-      - 윈도우를 시간축으로 쌓아 2D 스펙트로그램(time x freq) 생성
-
-    show_progress=True로 직접 호출하면 참가자 1명의 윈도우 단위 진행 바를
-    볼 수 있습니다 (기본은 꺼짐 — 윈도우가 수백~수천 개라 항상 켜두면
-    터미널이 매초 새 줄로 도배되는 문제가 있었음).
+  
 
     Returns
     -------
