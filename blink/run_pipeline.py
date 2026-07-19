@@ -1,7 +1,7 @@
 """
 run_pipeline.py
 =============================================================
-전체 blink 전처리 파이프라인의 메인 실행 파일.
+전체 blink 전처리 파이프라인의 메인 실행 파일
 """
 
 import os
@@ -55,7 +55,6 @@ def run_blink_pipeline(beh_labeled_path: str = config.BEH_LABELED_CSV, limit: in
         print(f"✅ '{beh_labeled_path}' 생성 완료! 라벨링을 시작합니다.")
 
     subjects = get_subject_list()
-    # 👈 중복 코드를 없애고, 정확히 55번째 피험자부터 이어서 하도록 수정했습니다.
     subjects = sorted(subjects)
     print(f"✅ 이번에 처리할 대상 피험자 수: {len(subjects)}명", flush=True)
 
