@@ -62,3 +62,7 @@ logs/
 
 # Environment variables
 .env
+
+
+# Gaze Movement Features
+Gaze/src/Feature*.csv
