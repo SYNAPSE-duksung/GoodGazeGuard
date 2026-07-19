@@ -65,4 +65,4 @@ logs/
 
 
 # Gaze Movement Features
-Gaze/src/Feature*.csv
+Gaze/src/Feature/*.csv
