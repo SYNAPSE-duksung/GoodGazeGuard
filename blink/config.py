@@ -23,7 +23,7 @@ FS = 120
 # =============================================================
 CONNECT_TIMEOUT = 10
 READ_TIMEOUT = 60
-HARD_TIMEOUT_SEC = 1000            # 👈 30초에서 1000초(약 16분)로 대폭 늘렸습니다!
+HARD_TIMEOUT_SEC = 1000        
 MAX_RETRIES = 1
 MAX_WORKERS = 1
 
