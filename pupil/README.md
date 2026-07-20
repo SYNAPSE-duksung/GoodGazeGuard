@@ -13,12 +13,12 @@
 
 ```
 OpenNeuro ds003838 (S3)
-    │  colab_cell1_download_and_reduce.py
+    │  download_and_reduce.py
     │  (신뢰도 높은 눈 선택 → 이상치 제거 → 선형보간 → baseline 정규화)
     ▼
 combined_pupil_positions.csv (참가자 84명, 시행×순번 단위 동공 반응)
     │
-    │  colab_cell4_download_beh_all.py
+    │  download_beh_all.py
     │  (84명 시행별 정답률 수집)
     ▼
 beh_all.csv
@@ -42,8 +42,8 @@ pupil_load_score_labeled.csv (최종 결과)
 
 | 파일명 | 역할 |
 | :--- | :--- |
-| `colab_cell1_download_and_reduce.py` | OpenNeuro S3에서 84명 원본 pupil.tsv를 청크 단위로 다운로드하며 전처리(눈 선택·이상치 제거·보간·baseline 정규화)까지 수행, `combined_pupil_positions.csv` 생성 |
-| `colab_cell4_download_beh_all.py` | 84명 beh.tsv 수집 및 시행별 정답률 계산, `beh_all.csv` 생성 |
+| `download_and_reduce.py` | OpenNeuro S3에서 84명 원본 pupil.tsv를 청크 단위로 다운로드하며 전처리(눈 선택·이상치 제거·보간·baseline 정규화)까지 수행, `combined_pupil_positions.csv` 생성 |
+| `download_beh_all.py` | 84명 beh.tsv 수집 및 시행별 정답률 계산, `beh_all.csv` 생성 |
 | `cluster_load_threshold.py` | 정답률 분포에 K-means(k=2)를 적용해 정상/과부하 경계값(40.5%)을 데이터 기반으로 도출 (1회성 분석) |
 | `pupil_baseline_pipeline.py` | 전체 파이프라인 메인 스크립트. feature 추출 → 라벨 생성 → 모델 학습 → 최종 결과 산출 |
 | `evaluate_model_performance.py` | 참가자 단위 교차검증(GroupKFold) 기준 Accuracy/Precision/Recall/R²/상관계수 산출 |
