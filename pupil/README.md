@@ -170,4 +170,4 @@ condition별 평균 부하 정도는 5 digit 19.3% → 9 digit 54.7% → 13 digi
 ## 향후 계획
 
 - 중간 난이도 판별력 개선을 위한 Feature 추가 검토
-- 다른 Feature(Gaze, Blink, rPPG)과 Feature-level 또는 Late Fusion 결합
+- 다른 파트(Gaze, Blink, rPPG)와 Feature-level 또는 Late Fusion 결합
