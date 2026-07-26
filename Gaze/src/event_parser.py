@@ -11,5 +11,7 @@ def load_events(subject):
         os.path.join(data_path, f"{subject}_task-memory_events.tsv"),
         sep="\t"
     )
+    events = events.sort_values("timestamp").reset_index(drop=True)
+
 
     return events

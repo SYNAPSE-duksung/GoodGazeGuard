@@ -1,63 +1,24 @@
 from load_data import load_gaze_data
 from event_parser import load_events
+from trial_builder import parse_label, make_trials
 from scipy.spatial import ConvexHull, QhullError
 import pandas as pd
 import numpy as np
 
-subjects = [
-    "sub-013",
-    "sub-014",
-    "sub-015",
-    "sub-016",
-    "sub-018",
-    "sub-019",
-    "sub-020",
-    "sub-021",
-    "sub-022"
-]
+split_df = pd.read_csv("subject_split.csv")
 
-def parse_label(label):
+print(split_df.columns)
+print(split_df.head())
 
-    label = str(int(label))
-
-    if label.startswith("50"):   # Listening
-        return {
-            "task": "listening",
-            "digit": int(label[2:4]),
-            "seq": int(label[4:6])
-        }
-
-    elif label.startswith("60"):   # Memory
-        return {
-            "task": "memory",
-            "digit": int(label[2:4]),
-            "seq": int(label[4:6]),
-            "correct": int(label[6])
-        }
-
-def make_trials(events):
-    """
-    Event들을 Trial 단위(5/9/13 digit)로 묶기
-    """
-    trials = []
-
-    i = 0
-    while i < len(events):
-        info = parse_label(events.iloc[i]["label"])
-        seq = info["seq"]
-        trials.append(events.iloc[i:i+seq])
-
-        i += seq
-
-    return trials
-
+subjects = split_df["subject_id"].tolist()
 
 all_features = []
 
 for subject in subjects:
 
     print(f"Processing {subject}...")
-
+    split = split_df.loc[split_df["subject_id"] == subject, "split"].iloc[0]
+   
     gaze_df = load_gaze_data(subject)
     events = load_events(subject)
 
@@ -65,16 +26,20 @@ for subject in subjects:
 
     features = []
 
-    for trial in trials:
+    for trial_id, trial in enumerate(trials):
 
         start = trial.iloc[0]["timestamp"]
-        end = trial.iloc[-1]["timestamp"] + 2
+
+        if trial_id < len(trials) - 1:
+            end = trials[trial_id + 1].iloc[0]["timestamp"]
+        else:
+            end = trial.iloc[-1]["timestamp"] + 2
 
         info = parse_label(trial.iloc[0]["label"])
 
         gaze_trial = gaze_df[
             (gaze_df["gaze_timestamp"] >= start) &
-            (gaze_df["gaze_timestamp"] <= end)
+            (gaze_df["gaze_timestamp"] < end)
         ].copy()
 
         # Trial 내부에서 movement 계산
@@ -100,9 +65,11 @@ for subject in subjects:
         if len(movement) == 0:
             features.append({
                 "subject": subject,
+                "split": split,
+                "trial_id": trial_id,
+
                 "task": info["task"],
                 "sequence_length": info["seq"],
-                "label": int(trial.iloc[0]["label"]),
 
                 "movement_mean": 0,
                 "movement_std": 0,
@@ -117,10 +84,10 @@ for subject in subjects:
                 "movement_kurtosis": 0,
                 "scanpath_length": 0,
                 "num_samples": 0,
-                "dispersion": 0,
+                "gaze_dispersion": 0,
                 "center_distance_std": 0,
-                "velocity_mean": 0,
-                "velocity_std": 0,
+                "gaze_velocity_mean": 0,
+                "gaze_velocity_std": 0,
                 "fixation_mean_duration": 0,
                 "fixation_count": 0,
                 "hull_area": 0,
@@ -168,10 +135,7 @@ for subject in subjects:
         # ==========================
         dt = gaze_trial["gaze_timestamp"].diff()
 
-        velocity = (
-            movement /
-            gaze_trial["gaze_timestamp"].diff().loc[movement.index]
-        )
+        velocity = movement/dt
 
         velocity = velocity.replace(
             [np.inf,-np.inf],
@@ -247,9 +211,11 @@ for subject in subjects:
 
         features.append({
             "subject": subject,
+            "split": split,
+            "trial_id": trial_id,
+
             "task": info["task"],
             "sequence_length": info["seq"],
-            "label": int(trial.iloc[0]["label"]),
 
             "movement_mean": movement.mean(),
             "movement_std": movement.std() if len(movement) > 1 else 0,
@@ -270,7 +236,7 @@ for subject in subjects:
             "num_samples": num_samples,
 
             # Dispersion
-            "dispersion": dispersion,
+            "gaze_dispersion": dispersion,
             "dispersion_x": dispersion_x,
             "dispersion_y": dispersion_y,
 
@@ -280,9 +246,9 @@ for subject in subjects:
             "center_distance_max": center_distance_max,
 
             # Velocity
-            "velocity_mean": velocity_mean,
-            "velocity_std": velocity_std,
-            "velocity_max": velocity_max,
+            "gaze_velocity_mean": velocity_mean,
+            "gaze_velocity_std": velocity_std,
+            "gaze_velocity_max": velocity_max,
 
             # Acceleration
             "acceleration_mean": acceleration_mean,
@@ -309,33 +275,8 @@ feature_df.to_csv("feature.csv", index=False)
 
 print(feature_df.head())
 print(feature_df.shape)
-print(events[["timestamp", "label"]].head())
-print(gaze_df["gaze_timestamp"].head())
-print(feature_df[feature_df.isna().any(axis=1)])
-
-
-corr = feature_df.corr(numeric_only=True)
-
-print(
-    corr["movement_mean"]
-    .sort_values(ascending=False)
-)
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-corr = feature_df.select_dtypes(include=np.number).corr()
-
-plt.figure(figsize=(15,12))
-sns.heatmap(
-    corr,
-    cmap="coolwarm",
-    center=0
-)
-plt.show()
-
-print(__file__)
-
+# print(events[["timestamp", "label"]].head())
+# print(gaze_df["gaze_timestamp"].head())
+# print(feature_df[feature_df.isna().any(axis=1)])
 print(feature_df.columns.tolist())
-
 print(len(feature_df.columns))
