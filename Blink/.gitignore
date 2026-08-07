@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 원본 데이터셋 (OpenNeuro ds003838 원본, 용량 크고 재배포 문제 있음 -- 절대 커밋 금지)
+ds003838/
+data/
+OpenNeuro/
+*.tsv
+*.tsv.gz
+
+# 데이터 / 결과물 (용량 크고 재현 가능하므로 저장소에 안 올림)
+output/
+*.csv
+
+# OS / 에디터
+.DS_Store
+.vscode/
+.idea/
