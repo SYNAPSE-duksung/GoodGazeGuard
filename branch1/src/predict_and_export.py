@@ -6,22 +6,20 @@ Branch1(pupil+gaze+blink LightGBM) 모델의 최종 예측 확률을 메타러�
 trial마다 계산한 [Low, Medium, High] 확률값을 넘기는 게 목적임 -- 메타러너는
 이 확률값을 브랜치2(rPPG) 결과와 합쳐서 최종 판단을 내림(Late Fusion).
 
-주의: 여기서 쓰는 모델은 데이터 누수를 다 제거한 clean-signal 버전이고,
-blink은 raw blink 플래그에서 직접 계산한 재계산 버전(61초 제약 없이 계산,
-커버리지 91~98%)을 사용함. (경과: baseline 78.2% -> blink 추가 후 79.3%,
-자세한 배경은 Branch1_모델_보고서.docx 참고)
+주의: 여기서 쓰는 모델은 데이터 누수를 다 제거한 clean-signal 버전임.
 
-(참고) 이 스크립트는 pupil/gaze/blink 파일이 각각 따로 있어야 실행됨(현재는
---merged 옵션 미지원). 이미 병합된 dataset/gaze_pupil_blink_merged.csv만
-갖고 있고 예측 확률 CSV를 다시 뽑아야 하면, train_branch1_lightgbm.py의
---merged 예시처럼 pd.read_csv로 바로 불러오게 고쳐 쓰면 됨.
+2026-08-12 업데이트: gaze/blink를 참가자별 개인화 정규화(personal z-score,
+src/branch1/personalize_gaze_blink.py 참고)한 버전을 기본으로 씀. 하이퍼파라미터
+튜닝/순서형 회귀 등 다른 방법도 시도했지만 개인화가 제일 나은 결과(test 81.3%,
+정규화 없는 버전은 80.4%)라 이걸 채택함. --merged 옵션으로 이미 개인화된 병합
+CSV(output/merged_dataset/gaze_pupil_blink_merged_personalized.csv)를 바로 넣으면 됨.
 
 사용법:
-    python src/predict_and_export.py \
-        --pupil output/timeseries/pupil_trial_dataset_wide.csv \
-        --gaze data/branch/feature_all_gaze.csv \
-        --blink output/blink/blink_features_ours.csv \
+    python src/branch1/predict_and_export.py \
+        --merged output/merged_dataset/gaze_pupil_blink_merged_personalized.csv \
         --out output/handoff_to_metalearner/branch1_predictions.csv
+
+    (또는 개인화 전 --pupil/--gaze/--blink 세 개를 따로 지정해서 원본 버전도 가능)
 """
 
 import argparse
@@ -41,12 +39,24 @@ INT_TO_LABEL = {v: k for k, v in LABEL_TO_INT.items()}
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pupil", default="output/timeseries/pupil_trial_dataset_wide.csv")
-    parser.add_argument("--gaze", required=True)
-    parser.add_argument("--blink", required=True)
+    parser.add_argument("--gaze", default=None, help="--merged를 안 쓸 경우 필수")
+    parser.add_argument("--blink", default=None, help="--merged를 안 쓸 경우 필수")
+    parser.add_argument("--merged", default=None,
+                         help="이미 합쳐진(필요하면 개인화까지 된) CSV를 바로 지정 -- "
+                              "지정 시 --pupil/--gaze/--blink는 무시됨")
     parser.add_argument("--out", default="output/handoff_to_metalearner/branch1_predictions.csv")
     args = parser.parse_args()
 
-    df = load_and_merge(args.pupil, args.gaze, args.blink)
+    if not args.merged and not (args.gaze and args.blink):
+        parser.error("--merged를 안 쓰려면 --gaze와 --blink가 둘 다 필요함")
+
+    if args.merged:
+        print(f"이미 합쳐진 파일 사용: {args.merged}")
+        df = pd.read_csv(args.merged)
+        if df["remember"].dtype == object:
+            df["remember"] = df["remember"].map({"True": True, "False": False})
+    else:
+        df = load_and_merge(args.pupil, args.gaze, args.blink)
     X, y, feature_cols = build_feature_table(df, clean_signal=True)
 
     train_mask = (df["split"] == "train").values
@@ -59,7 +69,7 @@ def main():
     train_data = lgb.Dataset(X[fit_mask], label=y[fit_mask])
     params = {"objective": "multiclass", "num_class": 3, "metric": "multi_logloss",
               "verbosity": -1, "seed": 42}
-    model = lgb.train(params, train_data, num_boost_round=305)  # 이전 학습에서 확인된 best_iteration 근처
+    model = lgb.train(params, train_data, num_boost_round=140)  # 개인화 버전 train-only 학습에서 확인된 best_iteration(140) 근처
 
     proba = model.predict(X)  # 전체 trial(train/valid/test 다 포함)에 대해 확률 계산
     pred_label = np.argmax(proba, axis=1)
