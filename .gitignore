@@ -8,6 +8,10 @@ __pycache__/
 venv/
 env/
 ENV/
+.venv-webcam/
+webcamTest/.model_cache/
+webcamTest/model/
+webcamTest/output/
 
 # Jupyter
 .ipynb_checkpoints/

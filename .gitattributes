@@ -1,0 +1,3 @@
+# LightGBM text models store per-tree byte sizes.  CRLF conversion corrupts them.
+branch1/**/*.txt text eol=lf
+streamlit_demo/branch1_lightgbm_personalized.txt text eol=lf
