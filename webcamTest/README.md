@@ -1,14 +1,9 @@
 # 웹캠 calibration 진행 상황
 
-## 현재 목적
+이 폴더는 웹캠 영상, MediaPipe 얼굴 랜드마크, 수동 trial 기록, pupil calibration이 정상 동작하는지 확인하기 위한 코드입니다. 실제 테스트 문제와 실시간 Branch1 예측은 아직 연결하지 않았습니다.
 
-이 폴더는 웹캠 영상, MediaPipe 얼굴 랜드마크, 수동 trial 기록, pupil calibration이
-정상 동작하는지 확인하기 위한 코드입니다. 실제 테스트 문제와 실시간 Branch1 예측은
-아직 연결하지 않았습니다.
-
-임시 숫자 과제 화면과 자동 예측은 실제 과제 규격을 받은 뒤 연결하기 위해 현재 실행
-흐름에서 제외했습니다. 대신 실제 과제 코드가 digit 표시 시점을 전달할 수 있도록
-기록 인터페이스를 유지합니다.
+자동 예측 기능은 실제 과제 규격을 받은 뒤 연결하기 위해 현재 실행흐름에서 제외했습니다. 
+대신 실제 과제 코드가 digit 표시 시점을 전달할 수 있도록 기록 인터페이스를 유지합니다.
 
 ## 실행 방법
 
@@ -27,7 +22,7 @@ python -m venv .venv-webcam
 ```
 
 `webcamTest/model/face_landmarker.task`는 MediaPipe 모델 파일이며 Git에 포함하지
-않습니다. 실행 전에 팀 공유 경로에서 받아 해당 위치에 넣어야 합니다.
+않습니다. 실행 전에 [다음 경로](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker)에서 받아 해당 위치에 넣어야 합니다.
 
 ## 수동 pupil calibration 절차
 
