@@ -5,22 +5,36 @@ app.py - GazeGuard 실시간 인지부하 측정 시연 앱 (Streamlit)
 Streamlit은 위젯 누를 때마다 코드 전체를 다시 실행하는 구조라 이게 없으면
 화면 전환이 유지가 안 됨)
 
-담당 파트별 연결 지점 (다른 두 명이 만드는 부분)
+담당 파트별 연결 지점
 ------------------------------------------------
-- 웹캠(실시간 신호 추출) 파트  -> get_webcam_features() 자리에 실제 로직 연결
-- 문제(과제 로직) 파트         -> run_task() 자리에 실제 숫자 스팬 과제 로직 연결
-- 이 둘이 최종적으로 넘겨주는 값을 합쳐서 Branch1 모델 feature 41개를 채우면
-  예측(Low/Medium/High)이 나옴
-
-지금 상태
-------------------------------------------------
-아직 웹캠/과제 파트가 없어서, 더미(랜덤) feature로 "화면 흐름 + 모델 연동"까지만
-동작하는 뼈대만 만들어둠. 실제 데이터가 오면 get_dummy_features() 자리를
-실제 함수 호출로 바꾸면 됨.
+- 웹캠(실시간 신호 추출) 파트  -> webcam_component.py(GazeGuardVideoProcessor)로
+  연동 완료. 웹캠 담당자의 원본 파일(config/signal_processing/calibration/
+  trial_recorder/extract_features/model_runtime)은 그대로 재사용, cv2 창
+  대신 streamlit-webrtc로 화면에 실시간으로 보이게만 새로 짬 (_render_webcam_panel
+  참고). pupil calibration(webcam_trial.py로 미리 한 번 해둬야 함)은 아직 이
+  화면에 없음 -- 원본 cv2 도구를 따로 실행해서 끝내둬야 함.
+- 문제(과제 로직) 파트         -> task_data.py(취조식 질문 30개+순서 그룹) +
+  task_component.py(준비 5초 -> 답변 -> 휴식 10초 상태머신, 블록마다 간이
+  NASA-TLX)로 연동 완료. 질문이 뜰 때마다 자동으로 vp.mark_digit()을 호출하고,
+  trial 시작/종료도 블록(난이도)마다 과제 흐름이 알아서 vp.start_trial()/
+  vp.end_trial()을 호출함 (수동 버튼 없앰). 2026-08-19 회의 반영: (1) 정답이
+  있는 사칙연산 -> 정답 없는 취조식 질문으로 교체, 정답 체크 로직 제거하고
+  '답변 완료' 버튼으로만 종료, (2) 시작 화면에서 시연 모드(블록당 3문항)/
+  정식 모드(블록당 10문항)를 매번 선택 가능, (3) 결과 화면에 난이도(블록)별
+  예측뿐 아니라 pupil/gaze/blink 원시 지표 비교도 같이 보여줌.
+  답변 시간(목표 20~30초)은 자동 강제 종료되지 않음 -- Streamlit은 사용자
+  입력(버튼 클릭) 없이는 스크립트가 안 돌아서, 대신 반응시간을 그대로 기록해
+  두고 나중에 30초 넘는 것만 데이터에서 걸러내는 방식으로 처리함
+  (task_component.py 상단 주석 참고).
+- 웹캠이 준비 안 됐거나(패키지 미설치, 카메라 권한 없음 등) trial을 안 돌렸으면
+  화면 하단 더미 버튼으로 화면 흐름만 계속 테스트할 수 있음.
 
 실행 방법:
-    pip install streamlit lightgbm pandas numpy
+    pip install -r requirements.txt
     streamlit run app.py
+
+주의: mediapipe/opencv 설치 용량이 커서 설치가 몇 분 걸릴 수 있음. 웹캠
+연동 부분은 실제 카메라가 있는 환경에서만 테스트 가능함.
 """
 
 from pathlib import Path
@@ -93,7 +107,7 @@ def init_state():
     if "stage" not in st.session_state:
         st.session_state.stage = "start"
     if "last_result" not in st.session_state:
-        st.session_state.last_result = None  # (pred_label, proba) 튜플
+        st.session_state.last_result = None  # (pred_label, proba) 튜플 -- 더미 테스트 버튼 전용
 
 
 def go_to(stage: str):
@@ -144,7 +158,7 @@ def view_start():
     st.title("GazeGuard 인지부하 측정 시연")
     st.markdown(
         "<p style='text-align:center;'>웹캠으로 눈 움직임/깜빡임을 측정하면서 "
-        "숫자 기억 과제를 수행합니다.<br>시작을 누르면 측정 화면으로 이동합니다.</p>",
+        "질문에 답변합니다.<br>시작을 누르면 측정 화면으로 이동합니다.</p>",
         unsafe_allow_html=True,
     )
     st.write("")  # 버튼 위 여백
@@ -159,54 +173,150 @@ def view_measuring():
     st.title("측정 중")
 
     col1, col2 = st.columns(2)
+
     with col1:
         st.subheader("웹캠")
-        st.info("여기에 웹캠 담당자의 화면(streamlit-webrtc 컴포넌트 등)을 붙일 예정")
+        vp = _render_webcam_panel()
+
     with col2:
         st.subheader("과제")
-        st.info("여기에 문제 담당자의 숫자 스팬 과제 화면을 붙일 예정")
+        from task_component import render_task_panel
+        render_task_panel(vp)
 
     st.divider()
-    st.caption("지금은 두 파트가 아직 없어서, 버튼으로 '측정 종료'를 흉내내는 상태입니다.")
-
-    if centered_button("측정 종료 (임시)"):
-        # 실제로는: 과제가 끝나는 시점에 웹캠 파트가 집계한 feature를 모델에 넣어서
-        # 예측해야 함. 지금은 모델이 최종본이 아니라서 더미 결과로 대체.
+    st.caption("과제를 다 마치면 자동으로 결과 화면으로 넘어가요. 웹캠 없이 화면 흐름만 보고 싶으면 아래 버튼을 써도 돼요.")
+    if centered_button("측정 종료 (더미, 화면 테스트용)"):
         st.session_state.last_result = get_dummy_prediction()
         go_to("result")
+
+
+def _render_webcam_panel():
+    """웹캠 패널: streamlit-webrtc로 실시간 영상을 보여줌. trial 시작/mark_digit/
+    종료는 이제 오른쪽 '과제' 패널(task_component.render_task_panel)이 문제
+    흐름에 맞춰 알아서 호출하므로, 여기서는 영상 + 상태 표시만 담당함.
+    streamlit-webrtc나 mediapipe가 설치 안 돼있으면(또는 카메라 권한이 없으면)
+    에러 대신 안내 메시지만 보여주고 None을 반환함 -- 이 패널이 실패해도 화면
+    하단의 더미 버튼으로 흐름 테스트는 계속할 수 있게 하기 위함.
+
+    반환값: GazeGuardVideoProcessor 인스턴스 (연결 안 됐으면 None)
+    """
+    try:
+        from streamlit_webrtc import webrtc_streamer, WebRtcMode
+        from webcam_component import GazeGuardVideoProcessor
+        from config import PUPIL_REFERENCE_PATH
+    except Exception as e:
+        st.warning(f"웹캠 컴포넌트를 불러오지 못했어요 (패키지 설치 확인 필요): {e}")
+        return None
+
+    if not PUPIL_REFERENCE_PATH.exists():
+        st.warning(
+            "아직 개인 pupil calibration 파일(pupil_reference.json)이 없어요. "
+            "`python webcam_trial.py`로 먼저 calibration을 한 번 끝내야 pupil "
+            "feature가 제대로 나와요 (calibration 안 해도 화면은 뜨지만, 결과는 부정확할 수 있음)."
+        )
+
+    ctx = webrtc_streamer(
+        key="gazeguard-webcam",
+        mode=WebRtcMode.SENDRECV,
+        video_processor_factory=GazeGuardVideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+    )
+
+    if not (ctx and ctx.video_processor):
+        st.caption("웹캠 연결 대기 중... (브라우저가 카메라 권한을 물어보면 허용해주세요)")
+        return None
+
+    vp = ctx.video_processor
+    recording = vp.is_recording()
+    st.caption(f"상태: {'🔴 측정 중' if recording else '⚪ 대기 중'}")
+    return vp
 
 
 # ------------------------------------------------------------------
 # 화면 3: 결과
 # ------------------------------------------------------------------
+def _render_one_result(label_prefix: str, pred, proba):
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        # st.metric은 라벨/값 크기 차이가 커서 보기 불편해 커스텀 HTML로 교체.
+        st.markdown(
+            f"""
+            <div style='text-align:center; margin-bottom:0.5rem;'>
+                <span style='font-size:1.3rem; font-weight:600;'>{label_prefix}: </span>
+                <span style='font-size:1.3rem; font-weight:700; color:#2f855a;'>{pred}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        for lab, p in zip(LABELS, proba):
+            st.progress(float(p), text=f"{lab}: {p * 100:.1f}%")
+
+
+def _render_indicator_comparison(block_results):
+    """난이도(블록)별로 계산된 원시 feature 값을 표+막대그래프로 비교.
+    회의에서 나온 '각 지표별로 부하가 얼마나 나타났는지 보고 싶다'는
+    요청 반영 -- 최종 라벨만으로는 안 보이는 세부 신호 변화를 보여줌."""
+    from task_component import DISPLAY_FEATURES
+    from task_data import DIFFICULTY_LABELS
+
+    rows = []
+    for r in block_results:
+        if not r.get("features"):
+            continue
+        row = {"난이도": DIFFICULTY_LABELS.get(r["difficulty"], r["difficulty"])}
+        for col, label in DISPLAY_FEATURES:
+            row[label] = r["features"].get(col)
+        rows.append(row)
+
+    if not rows:
+        return
+
+    st.divider()
+    st.subheader("지표별 비교")
+    df = pd.DataFrame(rows).set_index("난이도")
+    st.dataframe(df.style.format("{:.3f}"), use_container_width=True)
+
+    # 그래프를 세로로 쭉 나열하면 스크롤이 너무 길어져서, 한 줄에 3개씩
+    # 격자로 배치함 (st.columns로 줄마다 새로 나눔)
+    CHARTS_PER_ROW = 3
+    chart_cols = [(col, label) for col, label in DISPLAY_FEATURES if label in df.columns]
+    for i in range(0, len(chart_cols), CHARTS_PER_ROW):
+        row_items = chart_cols[i:i + CHARTS_PER_ROW]
+        cols = st.columns(len(row_items))
+        for c, (col, label) in zip(cols, row_items):
+            with c:
+                st.caption(label)
+                st.bar_chart(df[[label]], height=220)
+
+
 def view_result():
     st.title("결과")
 
-    result = st.session_state.last_result
-    if result is None:
-        st.warning("측정 데이터가 없습니다. 처음부터 다시 시작해주세요.")
-    else:
-        pred, proba = result
+    block_results = st.session_state.get("task_block_results") or []
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            # st.metric은 라벨/값 크기 차이가 커서 보기 불편해 커스텀 HTML로 교체.
-            # 라벨+값을 한 줄에 같은 크기로 표시함 (span 두 개를 나란히 놓고 폰트 크기 동일하게 지정)
-            st.markdown(
-                f"""
-                <div style='text-align:center; margin-bottom:1rem;'>
-                    <span style='font-size:1.6rem; font-weight:600;'>예측된 인지부하 수준: </span>
-                    <span style='font-size:1.6rem; font-weight:700; color:#2f855a;'>{pred}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            for lab, p in zip(LABELS, proba):
-                st.progress(float(p), text=f"{lab}: {p * 100:.1f}%")
+    if block_results:
+        # 난이도(블록)마다 따로 돌린 예측 결과를 각각 보여줌 (task_component._finalize_block 참고)
+        from task_data import DIFFICULTY_LABELS
+        for i, r in enumerate(block_results):
+            diff_label = DIFFICULTY_LABELS.get(r["difficulty"], r["difficulty"])
+            if r["error"]:
+                st.warning(f"[{diff_label}] 예측 실패: {r['error']}")
+            else:
+                _render_one_result(f"{diff_label} 블록 -> 예측", r["label"], r["proba"])
+            if i < len(block_results) - 1:
+                st.write("")
+        _render_indicator_comparison(block_results)
+    elif st.session_state.last_result is not None:
+        pred, proba = st.session_state.last_result
+        _render_one_result("예측된 인지부하 수준", pred, proba)
+    else:
+        st.warning("측정 데이터가 없습니다. 처음부터 다시 시작해주세요.")
 
     st.write("")
     if centered_button("첫 화면으로"):
         st.session_state.last_result = None
+        from task_component import reset_task_state
+        reset_task_state()
         go_to("start")
 
 

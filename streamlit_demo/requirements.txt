@@ -2,3 +2,7 @@ streamlit
 lightgbm
 pandas
 numpy
+streamlit-webrtc
+opencv-python
+mediapipe
+scipy
