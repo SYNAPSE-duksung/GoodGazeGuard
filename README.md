@@ -167,12 +167,21 @@ python .\cognitive_load_score.py --features .\results\hrv_features_all_subjects.
 
 Python, Streamlit, LightGBM, pandas, NumPy, SciPy, scikit-learn, OpenCV, MediaPipe, streamlit-webrtc, Matplotlib
 
-## 알려진 제한 사항
+## 한계
 
 - 웹캠에서 얻는 동공·시선·blink 값은 연구용 eye tracker 데이터와 측정 방식이 다르므로, 실제 환경에서 별도 검증이 필요합니다.
 - 조명, 얼굴 각도, 안경, 움직임, 카메라 품질은 신호 품질과 예측 결과에 영향을 줍니다.
 - rPPG 모듈은 독립 실험 단계이며, 현재 웹 데모의 실시간 예측 파이프라인에는 통합되어 있지 않습니다.
 - 모델의 인지 부하 라벨은 과제 난이도와 행동 결과를 바탕으로 구성한 연구용 지표입니다.
+
+## 팀원 역할 분담
+ 
+| 이름 | 역할 |
+| --- | --- |
+| 박소현 | Blink 학습 및 Fusion 방식 탐색 |
+| 박수빈 | Pupil 학습 및 모달리티 병합, Streamlit 구현 |
+| 선비 | Gaze 학습 및 branch1 기준 실시간 웹캠 연동 |
+| 이현지 | rPPG 및 Blink 학습 추가, 실험 문제 설계 |
 
 ## 참고
 
