@@ -18,6 +18,15 @@
 - Streamlit 기반 과제 진행, 간이 NASA-TLX 설문, 결과 시각화
 - rPPG 영상에서 POS 알고리즘과 HRV 특징을 이용한 인지 부하 점수 산출 실험
 
+## 스크린샷
+ 
+| 화면 | 설명 |
+| :---: | --- |
+| <img src="https://github.com/user-attachments/assets/ef960254-5416-447a-b466-3fdd1c70f453" width="300"/> | 웹캠 연결 및 과제 진행 화면. 참가자 ID·진행 모드(시연/정식)를 선택하고 과제 시작 |
+| <img src="https://github.com/user-attachments/assets/5a77a7e9-3dfe-4d4f-9d00-cde73bdfce94" width="300"/> | 난이도 블록(Low/Medium/High)별 예측 확률 결과 화면 |
+| <img src="https://github.com/user-attachments/assets/70986310-9423-4907-8454-c748a386cc3c" width="300"/> | 난이도별 동공·시선·눈 깜빡임 지표를 비교한 표 및 그래프 |
+
+
 ## 저장소 구조
 
 ```text
